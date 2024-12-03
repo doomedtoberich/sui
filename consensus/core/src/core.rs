@@ -274,7 +274,7 @@ impl Core {
         let (mut accepted_blocks, missing_blocks) = self.block_manager.try_accept_blocks(blocks);
 
         if !accepted_blocks.is_empty() {
-            debug!(
+            info!(
                 "Accepted blocks: {}",
                 accepted_blocks
                     .iter()
@@ -307,6 +307,7 @@ impl Core {
             .threshold_clock
             .add_blocks(accepted_blocks.iter().map(|b| b.reference()).collect())
         {
+            info!("Threshold clock advanced to {new_round}");
             // notify that threshold clock advanced to new round
             self.signals.new_round(new_round);
         }
@@ -418,6 +419,7 @@ impl Core {
 
             // If we did not find enough good ancestors to propose, continue to wait before proposing.
             if ancestors.is_empty() {
+                info!("No smart ancestors found to propose for {clock_round}");
                 assert!(
                     !force,
                     "Ancestors should have been returned if force is true!"
@@ -525,8 +527,20 @@ impl Core {
         let (accepted_blocks, missing) = self
             .block_manager
             .try_accept_blocks(vec![verified_block.clone()]);
-        assert_eq!(accepted_blocks.len(), 1);
-        assert!(missing.is_empty());
+        assert_eq!(
+            accepted_blocks.len(),
+            1,
+            "Created block {:?} did not get accepted for {} and gc_round {}",
+            verified_block,
+            clock_round,
+            self.dag_state.read().gc_round()
+        );
+        assert!(
+            missing.is_empty(),
+            "Missing blocks for created block {:?} for round {}",
+            verified_block,
+            clock_round
+        );
 
         // Internally accept the block to move the threshold clock etc
         self.add_accepted_blocks(vec![verified_block.clone()]);
@@ -676,6 +690,8 @@ impl Core {
                     .write()
                     .add_unscored_committed_subdags(subdags.clone());
             }
+
+            info!("Advance gc_round to {}", self.dag_state.read().gc_round());
 
             // Try to unsuspend blocks if gc_round has advanced.
             let accepted_blocks = self
