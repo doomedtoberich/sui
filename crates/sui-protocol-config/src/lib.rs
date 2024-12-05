@@ -577,7 +577,7 @@ struct FeatureFlags {
     #[serde(skip_serializing_if = "is_false")]
     consensus_round_prober_probe_accepted_rounds: bool,
 
-    // Enables the new logic for collecting the subdag in the consensus linearizer. The new logic does not stop the recursion at the highest 
+    // Enables the new logic for collecting the subdag in the consensus linearizer. The new logic does not stop the recursion at the highest
     // committed round for each authority, but allows to commit uncommitted blocks up to gc round (excluded) for that authority.
     #[serde(skip_serializing_if = "is_false")]
     consensus_linearize_subdag_v2: bool,
@@ -1706,7 +1706,7 @@ impl ProtocolConfig {
         self.feature_flags
             .consensus_round_prober_probe_accepted_rounds
     }
-            
+
     pub fn consensus_linearize_subdag_v2(&self) -> bool {
         let res = self.feature_flags.consensus_linearize_subdag_v2;
         assert!(
