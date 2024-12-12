@@ -124,7 +124,7 @@ impl Indexer {
         indexer_args: IndexerArgs,
         client_args: ClientArgs,
         ingestion_config: IngestionConfig,
-        migrations: &'static EmbeddedMigrations,
+        migrations: Option<&'static EmbeddedMigrations>,
         cancel: CancellationToken,
     ) -> Result<Self> {
         let IndexerArgs {
@@ -139,10 +139,12 @@ impl Indexer {
             .await
             .context("Failed to connect to database")?;
 
-        // At indexer initialization, we ensure that the DB schema is up-to-date.
-        db.run_migrations(Self::migrations(migrations))
-            .await
-            .context("Failed to run pending migrations")?;
+        if let Some(migrations) = migrations {
+            // At indexer initialization, we ensure that the DB schema is up-to-date.
+            db.run_migrations(Self::migrations(migrations))
+                .await
+                .context("Failed to run pending migrations")?;
+        }
 
         let (metrics, metrics_service) =
             MetricsService::new(metrics_address, db.clone(), cancel.clone())?;
