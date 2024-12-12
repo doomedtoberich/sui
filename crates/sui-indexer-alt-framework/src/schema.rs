@@ -23,4 +23,7 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(cp_mapping, watermarks,);
+diesel::allow_tables_to_appear_in_same_query!(
+    cp_mapping,
+    watermarks,
+);
