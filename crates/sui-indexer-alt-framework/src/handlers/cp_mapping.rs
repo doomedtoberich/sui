@@ -39,8 +39,8 @@ impl PrunableRange {
     ) -> QueryResult<PrunableRange> {
         let results = cp_mapping::table
             .select(StoredCpMapping::as_select())
-            .filter(cp_mapping::cp.eq_any([from_cp as i64, to_cp as i64]))
-            .order(cp_mapping::cp.asc())
+            .filter(cp_mapping::cp_sequence_number.eq_any([from_cp as i64, to_cp as i64]))
+            .order(cp_mapping::cp_sequence_number.asc())
             .load::<StoredCpMapping>(conn)
             .await?;
 
@@ -55,7 +55,10 @@ impl PrunableRange {
 
     /// Inclusive start and exclusive end range of prunable checkpoints.
     pub fn checkpoint_interval(&self) -> (u64, u64) {
-        (self.from.cp as u64, self.to.cp as u64)
+        (
+            self.from.cp_sequence_number as u64,
+            self.to.cp_sequence_number as u64,
+        )
     }
 
     /// Inclusive start and exclusive end range of prunable txs.
