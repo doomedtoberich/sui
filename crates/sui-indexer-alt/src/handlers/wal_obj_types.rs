@@ -6,7 +6,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use sui_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
+use sui_indexer_alt_framework::pipeline::{concurrent::Handler, CheckpointMapping, Processor};
 use sui_indexer_alt_schema::{
     objects::{StoredObjectUpdate, StoredSumObjType, StoredWalObjType},
     schema::wal_obj_types,
@@ -59,9 +59,10 @@ impl Handler for WalObjTypes {
             .await?)
     }
 
-    async fn prune(from: u64, to: u64, conn: &mut db::Connection<'_>) -> Result<usize> {
+    async fn prune(range: CheckpointMapping, conn: &mut db::Connection<'_>) -> Result<usize> {
+        let (from, to) = range.checkpoint_interval();
         let filter = wal_obj_types::table
-            .filter(wal_obj_types::cp_sequence_number.between(from as i64, to as i64 - 1));
+            .filter(wal_obj_types::cp_sequence_number.between(from as i64, to as i64));
 
         Ok(diesel::delete(filter).execute(conn).await?)
     }
