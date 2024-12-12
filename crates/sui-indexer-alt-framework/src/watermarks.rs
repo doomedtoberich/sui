@@ -197,6 +197,7 @@ impl<'p> PrunerWatermark<'p> {
     }
 
     /// The next chunk of checkpoints that the pruner should work on, to advance the watermark.
+    /// Returns a tuple (from, to) where `from` is inclusive and `to` is exclusive.
     pub(crate) fn next_chunk(&mut self, size: u64) -> (u64, u64) {
         let from = self.pruner_hi as u64;
         let to = (from + size).min(self.reader_lo as u64);

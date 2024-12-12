@@ -21,14 +21,14 @@ pub(crate) struct StoredCpMapping {
     pub epoch: i64,
 }
 
-pub struct CheckpointMapping {
+pub struct PrunableRange {
     from: StoredCpMapping,
     to: StoredCpMapping,
 }
 
 pub(crate) struct CpMapping;
 
-impl CheckpointMapping {
+impl PrunableRange {
     /// Gets the tx and epoch mappings for both the start and end checkpoints.
     ///
     /// The values are expected to exist since the cp_mapping table must have enough information to
@@ -37,7 +37,7 @@ impl CheckpointMapping {
         conn: &mut Connection<'_>,
         from_cp: u64,
         to_cp: u64,
-    ) -> QueryResult<CheckpointMapping> {
+    ) -> QueryResult<PrunableRange> {
         let results = cp_mapping::table
             .select(StoredCpMapping::as_select())
             .filter(cp_mapping::cp.eq_any([from_cp as i64, to_cp as i64]))
@@ -46,7 +46,7 @@ impl CheckpointMapping {
             .await?;
 
         match results.as_slice() {
-            [first, .., last] => Ok(CheckpointMapping {
+            [first, .., last] => Ok(PrunableRange {
                 from: first.clone(),
                 to: last.clone(),
             }),
@@ -54,21 +54,21 @@ impl CheckpointMapping {
         }
     }
 
-    pub fn checkpoint_range(&self) -> (u64, u64) {
+    /// Inclusive start and exclusive end range of prunable checkpoints.
+    pub fn checkpoint_interval(&self) -> (u64, u64) {
         (self.from.cp as u64, self.to.cp as u64)
     }
 
-    /// Returns the tx range for the checkpoint mapping. Because tx_lo is inclusive but tx_hi is
-    /// exclusive, returns None when encountering an empty range (where tx_lo equals tx_hi).
-    pub fn tx_range(&self) -> Option<(u64, u64)> {
-        if self.from.tx_lo == self.to.tx_hi {
-            None
-        } else {
-            Some((self.from.tx_lo as u64, self.to.tx_hi as u64))
-        }
+    /// Inclusive start and exclusive end range of prunable txs.
+    pub fn tx_interval(&self) -> (u64, u64) {
+        (self.from.tx_lo as u64, self.to.tx_hi as u64)
     }
 
-    pub fn epoch_range(&self) -> (u64, u64) {
+    /// Returns the epochs that contain the checkpoints in this range.
+    ///
+    /// While the checkpoint and tx ranges use exclusive end bounds, the epoch is different in that
+    /// it represents which epoch the `from` and `to` checkpoints come from.
+    pub fn containing_epochs(&self) -> (u64, u64) {
         (self.from.epoch as u64, self.to.epoch as u64)
     }
 }
