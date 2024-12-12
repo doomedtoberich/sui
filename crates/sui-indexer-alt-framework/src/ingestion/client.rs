@@ -3,6 +3,7 @@
 
 use crate::ingestion::local_client::LocalIngestionClient;
 use crate::ingestion::remote_client::RemoteIngestionClient;
+use crate::ingestion::rpc_client::RpcIngestionClient;
 use crate::ingestion::Error as IngestionError;
 use crate::ingestion::Result as IngestionResult;
 use crate::metrics::IndexerMetrics;
@@ -71,6 +72,17 @@ impl IngestionClient {
             metrics,
             latest_ingested_checkpoint,
         }
+    }
+
+    pub(crate) fn new_rpc(url: Url, metrics: Arc<IndexerMetrics>) -> IngestionResult<Self> {
+        let client =
+            Arc::new(RpcIngestionClient::new(url).map_err(|e| IngestionError::RpcClientError(e))?);
+        let latest_ingested_checkpoint = Arc::new(AtomicU64::new(0));
+        Ok(IngestionClient {
+            client,
+            metrics,
+            latest_ingested_checkpoint,
+        })
     }
 
     /// Fetch checkpoint data by sequence number.
