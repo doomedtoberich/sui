@@ -5,9 +5,9 @@
 diesel::table! {
     cp_mapping (cp) {
         cp -> Int8,
-        tx_lo -> Nullable<Int8>,
-        tx_hi -> Nullable<Int8>,
-        epoch -> Nullable<Int8>,
+        tx_lo -> Int8,
+        tx_hi -> Int8,
+        epoch -> Int8,
     }
 }
 
