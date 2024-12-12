@@ -12,6 +12,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, error, info, warn};
 
 use crate::{
+    handlers::cp_mapping::CheckpointMapping,
     metrics::IndexerMetrics,
     pipeline::logging::{LoggerWatermark, WatermarkLogger},
     watermarks::PrunerWatermark,
@@ -136,7 +137,15 @@ pub(super) fn pruner<H: Handler + 'static>(
                 };
 
                 let (from, to) = watermark.next_chunk(config.max_chunk_size);
-                // TODO(wlmyng): map the cp to its corresponding epoch and tx as well
+                let checkpoint_mapping =
+                    match CheckpointMapping::get_range(&mut conn, from, to).await {
+                        Ok(checkpoint_mapping) => checkpoint_mapping,
+                        Err(e) => {
+                            guard.stop_and_record();
+                            error!(pipeline = H::NAME, "Failed to get checkpoint mapping: {e}");
+                            break;
+                        }
+                    };
                 let affected = match H::prune(from, to, &mut conn).await {
                     Ok(affected) => {
                         guard.stop_and_record();

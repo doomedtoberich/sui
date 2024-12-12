@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS cp_mapping
     -- checkpoint's network total transactions. If this number is equal to `tx_lo`, then this
     -- checkpoint contains no transactions.
     tx_hi                               BIGINT       NOT NULL,
-    -- The epoch this checkpoint belongs to
+    -- The epoch this checkpoint belongs to.
     epoch                               BIGINT       NOT NULL
 );
