@@ -11,8 +11,7 @@ use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    handlers::cp_mapping::CheckpointMapping, metrics::IndexerMetrics,
-    watermarks::CommitterWatermark,
+    handlers::cp_mapping::PrunableRange, metrics::IndexerMetrics, watermarks::CommitterWatermark,
 };
 
 use super::{processor::processor, CommitterConfig, Processor, WatermarkPart, PIPELINE_BUFFER};
@@ -68,10 +67,7 @@ pub trait Handler: Processor<Value: FieldCount> {
     /// Clean up data between two epochs, checkpoints, or txs as determined by the handler,
     /// returning the number of rows affected. This function is optional, and defaults to not
     /// pruning at all.
-    async fn prune(
-        _range: CheckpointMapping,
-        _conn: &mut db::Connection<'_>,
-    ) -> anyhow::Result<usize> {
+    async fn prune(_range: PrunableRange, _conn: &mut db::Connection<'_>) -> anyhow::Result<usize> {
         Ok(0)
     }
 }

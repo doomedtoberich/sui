@@ -6,7 +6,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use sui_indexer_alt_framework::pipeline::{concurrent::Handler, CheckpointMapping, Processor};
+use sui_indexer_alt_framework::pipeline::{concurrent::Handler, Processor, PrunableRange};
 use sui_indexer_alt_schema::{
     objects::{StoredObjectUpdate, StoredSumCoinBalance, StoredWalCoinBalance},
     schema::wal_coin_balances,
@@ -56,10 +56,10 @@ impl Handler for WalCoinBalances {
             .await?)
     }
 
-    async fn prune(range: CheckpointMapping, conn: &mut db::Connection<'_>) -> Result<usize> {
+    async fn prune(range: PrunableRange, conn: &mut db::Connection<'_>) -> Result<usize> {
         let (from, to) = range.checkpoint_interval();
         let filter = wal_coin_balances::table
-            .filter(wal_coin_balances::cp_sequence_number.between(from as i64, to as i64));
+            .filter(wal_coin_balances::cp_sequence_number.between(from as i64, to as i64 - 1));
 
         Ok(diesel::delete(filter).execute(conn).await?)
     }
