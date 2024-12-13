@@ -14,7 +14,7 @@ use metrics::{IndexerMetrics, MetricsService};
 use pipeline::{
     concurrent::{self, ConcurrentConfig},
     sequential::{self, SequentialConfig},
-    CommitterConfig, Processor,
+    Processor,
 };
 use sui_pg_db::{Db, DbArgs};
 use task::graceful_shutdown;
@@ -376,7 +376,7 @@ impl Indexer {
         );
 
         if let Some(enabled_pipelines) = &mut self.enabled_pipelines {
-            if P::NAME != CpMapping::NAME && !enabled_pipelines.remove(P::NAME) {
+            if !enabled_pipelines.remove(P::NAME) {
                 info!(pipeline = P::NAME, "Skipping");
                 return Ok(None);
             }
