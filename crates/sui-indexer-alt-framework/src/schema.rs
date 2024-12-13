@@ -6,7 +6,6 @@ diesel::table! {
     cp_mapping (cp_sequence_number) {
         cp_sequence_number -> Int8,
         tx_lo -> Int8,
-        tx_hi -> Int8,
         epoch -> Int8,
     }
 }
