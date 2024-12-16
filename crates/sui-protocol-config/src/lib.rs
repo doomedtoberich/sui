@@ -2995,7 +2995,7 @@ impl ProtocolConfig {
                     }
 
                     if chain != Chain::Mainnet && chain != Chain::Testnet {
-                        cfg.feature_flags.consensus_linearize_subdag_v2 = true;
+                        cfg.feature_flags.consensus_linearize_subdag_v2 = false;
                     }
                 }
                 70 => {
