@@ -39,3 +39,8 @@
 	},
 	"globalEnv": ["VERCEL_ENV", "VITE_NETWORK", "VITE_VERCEL_ANALYTICS_ID", "VITE_SENTRY_SAMPLE_RATE"]
 }
+"dev": {
+			"dependsOn": ["^build"],
+			"cache": false,
+			"persistent": true
+	}
